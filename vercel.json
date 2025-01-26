@@ -21,7 +21,7 @@
             "dest": "server.js"
         }
     ],
-    "regions": ["hnd1", "sin1", "icn1", "bom1"],
+    "regions": ["hnd1"],
     "headers": [
         {
             "source": "/(.*)",
