@@ -8,15 +8,20 @@
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
+            "src": "/health",
             "dest": "server.js"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "server.js",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
         },
         {
             "src": "/(.*)",
             "dest": "server.js"
         }
     ],
-    "regions": ["hnd1", "sin1"],
+    "regions": ["hnd1", "sin1", "icn1", "bom1"],
     "headers": [
         {
             "source": "/(.*)",
@@ -35,7 +40,7 @@
                 },
                 {
                     "key": "Cache-Control",
-                    "value": "public, max-age=0, must-revalidate"
+                    "value": "no-cache, no-store, must-revalidate"
                 }
             ]
         }

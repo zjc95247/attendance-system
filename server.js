@@ -3,6 +3,13 @@ const path = require('path');
 
 const app = express();
 
+// 请求日志中间件
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
+    next();
+});
+
 // CORS 中间件
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -16,26 +23,31 @@ app.use((req, res, next) => {
 
 // 性能优化中间件
 app.use((req, res, next) => {
-    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     next();
 });
 
 // 中间件
 app.use(express.json());
-app.use(express.static('public', {
-    maxAge: '1h',
-    etag: true,
-    lastModified: true
-}));
-
-// 基础路由
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.use(express.static('public'));
 
 // 健康检查
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString() });
+    const info = {
+        status: 'ok',
+        time: new Date().toISOString(),
+        headers: req.headers,
+        env: process.env.NODE_ENV,
+        region: process.env.VERCEL_REGION
+    };
+    console.log('Health check:', info);
+    res.json(info);
+});
+
+// 基础路由
+app.get('/', (req, res) => {
+    console.log('Serving index.html');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // API 路由
@@ -52,11 +64,15 @@ app.post('/api/login', (req, res) => {
 // 错误处理
 app.use((err, req, res, next) => {
     console.error('服务器错误:', err);
-    res.status(500).json({ message: '服务器错误' });
+    res.status(500).json({ 
+        message: '服务器错误',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 // 处理所有其他路由
 app.get('*', (req, res) => {
+    console.log('Fallback: Serving index.html');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
