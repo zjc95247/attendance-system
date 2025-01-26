@@ -8,16 +8,13 @@
     ],
     "routes": [
         {
+            "src": "/api/(.*)",
+            "dest": "server.js"
+        },
+        {
             "src": "/(.*)",
-            "dest": "/server.js",
-            "continue": true
+            "dest": "server.js"
         }
     ],
-    "regions": ["sin1"],
-    "functions": {
-        "server.js": {
-            "memory": 1024,
-            "maxDuration": 10
-        }
-    }
+    "regions": ["sin1"]
 } 
