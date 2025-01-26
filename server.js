@@ -3,9 +3,30 @@ const path = require('path');
 
 const app = express();
 
+// CORS 中间件
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With,Content-Type,Accept,Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// 性能优化中间件
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    next();
+});
+
 // 中间件
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('public', {
+    maxAge: '1h',
+    etag: true,
+    lastModified: true
+}));
 
 // 基础路由
 app.get('/', (req, res) => {
