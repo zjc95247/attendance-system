@@ -42,24 +42,23 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-// API 路由
-app.use('/api/users', require('./routes/users'));
-app.use('/api/attendance', require('./routes/attendance'));
+// 所有其他路由返回 index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // 添加调试路由
 app.get('/debug', (req, res) => {
     res.json({
         status: 'ok',
-        dbStatus: mongoose.connection.readyState,
         env: process.env.NODE_ENV,
-        mongodbUri: MONGODB_URI.replace(/\/\/.*@/, '//***:***@') // 隐藏敏感信息
+        time: new Date().toISOString()
     });
 });
 
-// 所有其他路由返回 index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// API 路由
+app.use('/api/users', require('./routes/users'));
+app.use('/api/attendance', require('./routes/attendance'));
 
 // 添加错误处理中间件
 app.use((err, req, res, next) => {
@@ -73,8 +72,10 @@ app.use((err, req, res, next) => {
 // 导出 app 以供 Vercel 使用
 module.exports = app;
 
-// 启动服务器
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`服务器运行在端口 ${PORT}`);
-}); 
+// 如果不是在 Vercel 环境中，启动本地服务器
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`服务器运行在端口 ${PORT}`);
+    });
+} 
