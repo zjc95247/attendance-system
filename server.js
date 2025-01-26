@@ -25,12 +25,12 @@ mongoose.connect(MONGODB_URI, {
   console.error('数据库连接失败:', err);
 });
 
-// 路由
+// API 路由
 app.use('/api/users', require('./routes/users'));
 app.use('/api/attendance', require('./routes/attendance'));
 
-// 服务静态文件
-app.get('/', (req, res) => {
+// 所有其他路由返回 index.html
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

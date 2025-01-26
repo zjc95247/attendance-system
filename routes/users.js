@@ -19,8 +19,13 @@ const auth = (req, res, next) => {
 // 用户注册
 router.post('/register', async (req, res) => {
     try {
-        const { username, password, role } = req.body;
+        console.log('收到注册请求:', req.body);
+        const { username, password } = req.body;
         
+        if (!username || !password) {
+            return res.status(400).json({ message: '用户名和密码不能为空' });
+        }
+
         // 检查用户是否已存在
         let user = await User.findOne({ username });
         if (user) {
@@ -31,12 +36,14 @@ router.post('/register', async (req, res) => {
         user = new User({
             username,
             password: await bcrypt.hash(password, 10),
-            role
+            role: 'user'  // 默认角色为普通用户
         });
 
         await user.save();
+        console.log('用户注册成功:', username);
         res.status(201).json({ message: '注册成功' });
     } catch (error) {
+        console.error('注册错误:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
@@ -44,7 +51,12 @@ router.post('/register', async (req, res) => {
 // 用户登录
 router.post('/login', async (req, res) => {
     try {
+        console.log('收到登录请求:', req.body);
         const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({ message: '用户名和密码不能为空' });
+        }
         
         // 查找用户
         const user = await User.findOne({ username });
@@ -65,8 +77,10 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1d' }
         );
 
+        console.log('用户登录成功:', username);
         res.json({ token });
     } catch (error) {
+        console.error('登录错误:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
@@ -75,8 +89,12 @@ router.post('/login', async (req, res) => {
 router.get('/verify', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: '用户不存在' });
+        }
         res.json({ role: user.role });
     } catch (error) {
+        console.error('验证错误:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
