@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>签到系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-form">
+            <h2>签到系统</h2>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="用户名" required>
+                <input type="password" id="password" placeholder="密码" required>
+                <button type="submit">登录</button>
+            </form>
+        </div>
+        
+        <div class="attendance-panel" style="display: none;">
+            <h2>今日签到</h2>
+            <button id="checkInBtn">签到</button>
+            <div id="checkInStatus"></div>
+        </div>
+
+        <div class="admin-panel" style="display: none;">
+            <h2>签到记录查询</h2>
+            <div class="date-filter">
+                <input type="date" id="startDate">
+                <input type="date" id="endDate">
+                <button id="queryBtn">查询</button>
+            </div>
+            <div class="records-container">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>日期</th>
+                            <th>签到时间</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
