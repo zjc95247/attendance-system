@@ -5,5 +5,19 @@
             "src": "server.js",
             "use": "@vercel/node"
         }
-    ]
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/server.js",
+            "continue": true
+        }
+    ],
+    "regions": ["sin1"],
+    "functions": {
+        "server.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    }
 } 

@@ -5,46 +5,75 @@ const app = express();
 
 // 基础中间件
 app.use(express.json());
-app.use(express.static('public'));
+
+// 请求日志
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
 
 // CORS 配置
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', '*');
+    res.header('Access-Control-Max-Age', '86400'); // 24小时
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
     next();
 });
 
-// 简单的主页路由
-app.get('/', (req, res) => {
-    res.send('Hello World');
+// 性能优化
+app.use((req, res, next) => {
+    res.header('Cache-Control', 'public, max-age=0');
+    res.header('X-DNS-Prefetch-Control', 'on');
+    next();
 });
 
-// 健康检查路由
-app.get('/health', (req, res) => {
+// 主页路由
+app.get('/', (req, res) => {
+    res.send(`
+        <html>
+            <head>
+                <title>服务器状态</title>
+                <meta charset="utf-8">
+            </head>
+            <body>
+                <h1>服务器正常运行中</h1>
+                <p>当前时间: ${new Date().toLocaleString()}</p>
+                <p>环境: ${process.env.NODE_ENV || 'development'}</p>
+                <p>区域: ${process.env.VERCEL_REGION || 'local'}</p>
+            </body>
+        </html>
+    `);
+});
+
+// 状态检查
+app.get('/status', (req, res) => {
     res.json({
         status: 'ok',
-        timestamp: new Date().toISOString(),
-        message: '服务器正常'
+        time: new Date().toISOString(),
+        env: process.env.NODE_ENV,
+        region: process.env.VERCEL_REGION,
+        headers: req.headers
     });
 });
 
-// 测试路由
+// API 测试
 app.get('/api/test', (req, res) => {
     res.json({
-        message: '测试成功',
-        time: new Date().toISOString()
+        message: '接口正常',
+        time: new Date().toISOString(),
+        clientIP: req.headers['x-forwarded-for'] || req.connection.remoteAddress
     });
 });
 
-// 错误处理中间件
+// 错误处理
 app.use((err, req, res, next) => {
-    console.error('服务器错误:', err);
+    console.error('Error:', err);
     res.status(500).json({
-        error: '服务器内部错误',
+        error: '服务器错误',
         message: process.env.NODE_ENV === 'development' ? err.message : '请稍后重试'
     });
 });
