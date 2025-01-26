@@ -16,13 +16,18 @@ const connectDB = async () => {
         await mongoose.connect(MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
+            connectTimeoutMS: 10000,
+            keepAlive: true,
+            keepAliveInitialDelay: 300000
         });
         console.log('数据库连接成功');
     } catch (error) {
         console.error('数据库连接失败:', error.message);
-        process.exit(1);
+        // 不要立即退出，而是继续尝试
+        console.log('将在 5 秒后重试连接...');
+        setTimeout(connectDB, 5000);
     }
 };
 
