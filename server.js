@@ -1,8 +1,40 @@
 const express = require('express');
 const path = require('path');
+const mongoose = require('mongoose');
 const app = express();
 
 // 版本 1.0.3 - 新项目部署测试 - ${new Date().toISOString()}
+
+// 连接数据库
+const connectDB = async () => {
+    try {
+        const MONGODB_URI = process.env.MONGODB_URI;
+        if (!MONGODB_URI) {
+            throw new Error('请设置 MONGODB_URI 环境变量');
+        }
+        
+        await mongoose.connect(MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        console.log('数据库连接成功');
+    } catch (error) {
+        console.error('数据库连接失败:', error.message);
+        process.exit(1);
+    }
+};
+
+// 用户模型
+const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, default: 'user' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', UserSchema);
 
 // 基础中间件
 app.use(express.json());
@@ -39,21 +71,69 @@ app.get('/', (req, res) => {
 });
 
 // API 路由
-app.post('/api/register', (req, res) => {
-    console.log('注册请求:', req.body);
-    res.json({ message: '注册功能正在开发中' });
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ message: '用户名和密码不能为空' });
+        }
+
+        // 检查用户是否已存在
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: '用户名已存在' });
+        }
+
+        // 创建新用户
+        const user = new User({ username, password });
+        await user.save();
+
+        res.status(201).json({ message: '注册成功' });
+    } catch (error) {
+        console.error('注册错误:', error);
+        res.status(500).json({ message: '注册失败，请稍后重试' });
+    }
 });
 
-app.post('/api/login', (req, res) => {
-    console.log('登录请求:', req.body);
-    res.json({ message: '登录功能正在开发中' });
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ message: '用户名和密码不能为空' });
+        }
+
+        // 查找用户
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(401).json({ message: '用户名或密码错误' });
+        }
+
+        // 验证密码
+        if (user.password !== password) {
+            return res.status(401).json({ message: '用户名或密码错误' });
+        }
+
+        res.json({ 
+            message: '登录成功',
+            user: {
+                username: user.username,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        console.error('登录错误:', error);
+        res.status(500).json({ message: '登录失败，请稍后重试' });
+    }
 });
 
 // 健康检查
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'ok',
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
+        dbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
 });
 
@@ -68,13 +148,14 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 导出 app
-module.exports = app;
+// 连接数据库并启动服务器
+connectDB().then(() => {
+    if (process.env.NODE_ENV !== 'production') {
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => {
+            console.log(`服务器运行在端口 ${PORT}`);
+        });
+    }
+});
 
-// 本地开发服务器
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`服务器运行在端口 ${PORT}`);
-    });
-} 
+module.exports = app; 
