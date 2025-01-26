@@ -8,19 +8,48 @@
 </head>
 <body>
     <div class="container">
-        <div class="login-form">
-            <h2>签到系统</h2>
-            <form id="loginForm">
-                <input type="text" id="username" placeholder="用户名" required>
-                <input type="password" id="password" placeholder="密码" required>
-                <button type="submit">登录</button>
+        <div class="form-container">
+            <h1>签到系统</h1>
+            <div class="tabs">
+                <button class="tab active" data-tab="login">登录</button>
+                <button class="tab" data-tab="register">注册</button>
+            </div>
+            
+            <form id="loginForm" class="form active">
+                <div class="form-group">
+                    <label for="loginUsername">用户名</label>
+                    <input type="text" id="loginUsername" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn">登录</button>
+            </form>
+
+            <form id="registerForm" class="form">
+                <div class="form-group">
+                    <label for="registerUsername">用户名</label>
+                    <input type="text" id="registerUsername" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn">注册</button>
             </form>
         </div>
-        
+
         <div class="attendance-panel" style="display: none;">
             <h2>今日签到</h2>
-            <button id="checkInBtn">签到</button>
-            <div id="checkInStatus"></div>
+            <div class="user-info">
+                <span id="userWelcome"></span>
+                <button id="logoutBtn" class="btn-secondary">退出登录</button>
+            </div>
+            <div class="check-in-section">
+                <button id="checkInBtn" class="btn">签到</button>
+                <div id="checkInStatus" class="status"></div>
+            </div>
         </div>
 
         <div class="admin-panel" style="display: none;">
@@ -28,7 +57,7 @@
             <div class="date-filter">
                 <input type="date" id="startDate">
                 <input type="date" id="endDate">
-                <button id="queryBtn">查询</button>
+                <button id="queryBtn" class="btn-secondary">查询</button>
             </div>
             <div class="records-container">
                 <table id="recordsTable">
