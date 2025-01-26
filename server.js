@@ -1,8 +1,7 @@
 const express = require('express');
-const path = require('path');
+const app = express();
 
 // 版本 1.0.3 - 新项目部署测试 - ${new Date().toISOString()}
-const app = express();
 
 // 基础中间件
 app.use(express.json());
@@ -21,7 +20,7 @@ app.use((req, res, next) => {
 
 // 简单的主页路由
 app.get('/', (req, res) => {
-    res.send('服务器正常运行中');
+    res.send('Hello World');
 });
 
 // 健康检查路由
@@ -34,9 +33,9 @@ app.get('/health', (req, res) => {
 });
 
 // 测试路由
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
     res.json({
-        message: '测试接口正常',
+        message: '测试成功',
         time: new Date().toISOString()
     });
 });
