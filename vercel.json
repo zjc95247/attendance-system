@@ -24,7 +24,7 @@
             "dest": "/server.js"
         }
     ],
-    "regions": ["hnd1", "sin1", "icn1"],
+    "regions": ["hnd1"],
     "env": {
         "NODE_ENV": "production"
     }
