@@ -4,77 +4,58 @@ const path = require('path');
 // 版本 1.0.3 - 新项目部署测试 - ${new Date().toISOString()}
 const app = express();
 
-// 请求日志中间件
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
-    next();
-});
+// 基础中间件
+app.use(express.json());
+app.use(express.static('public'));
 
-// CORS 中间件
+// CORS 配置
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With,Content-Type,Accept,Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', '*');
     if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
+        return res.status(200).end();
     }
     next();
 });
 
-// 性能优化中间件
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    next();
-});
-
-// 中间件
-app.use(express.json());
-app.use(express.static('public'));
-
-// 健康检查
-app.get('/health', (req, res) => {
-    const info = {
-        status: 'ok',
-        time: new Date().toISOString(),
-        headers: req.headers,
-        env: process.env.NODE_ENV,
-        region: process.env.VERCEL_REGION
-    };
-    console.log('Health check:', info);
-    res.json(info);
-});
-
-// 基础路由
+// 简单的主页路由
 app.get('/', (req, res) => {
-    console.log('Serving index.html');
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.send('服务器正常运行中');
 });
 
-// API 路由
-app.post('/api/register', (req, res) => {
-    console.log('收到注册请求:', req.body);
-    res.json({ message: '注册功能正在维护中' });
-});
-
-app.post('/api/login', (req, res) => {
-    console.log('收到登录请求:', req.body);
-    res.json({ message: '登录功能正在维护中' });
-});
-
-// 错误处理
-app.use((err, req, res, next) => {
-    console.error('服务器错误:', err);
-    res.status(500).json({ 
-        message: '服务器错误',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+// 健康检查路由
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        message: '服务器正常'
     });
 });
 
-// 处理所有其他路由
-app.get('*', (req, res) => {
-    console.log('Fallback: Serving index.html');
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// 测试路由
+app.get('/test', (req, res) => {
+    res.json({
+        message: '测试接口正常',
+        time: new Date().toISOString()
+    });
+});
+
+// 错误处理中间件
+app.use((err, req, res, next) => {
+    console.error('服务器错误:', err);
+    res.status(500).json({
+        error: '服务器内部错误',
+        message: process.env.NODE_ENV === 'development' ? err.message : '请稍后重试'
+    });
+});
+
+// 处理 404
+app.use((req, res) => {
+    res.status(404).json({
+        error: '未找到请求的资源',
+        path: req.path
+    });
 });
 
 // 导出 app
