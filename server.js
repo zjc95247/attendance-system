@@ -5,31 +5,54 @@ const app = express();
 
 // 版本 1.0.3 - 新项目部署测试 - ${new Date().toISOString()}
 
-// 连接数据库
+// 数据库连接重试
+let retryCount = 0;
+const maxRetries = 5;
+
 const connectDB = async () => {
     try {
-        const MONGODB_URI = process.env.MONGODB_URI;
-        if (!MONGODB_URI) {
-            throw new Error('请设置 MONGODB_URI 环境变量');
+        if (retryCount >= maxRetries) {
+            console.error('达到最大重试次数，停止重试');
+            return;
         }
+
+        const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://zjc95247:zjc95247@cluster0.xtxvxvx.mongodb.net/attendance-system?retryWrites=true&w=majority';
         
         await mongoose.connect(MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 45000,
-            connectTimeoutMS: 10000,
+            serverSelectionTimeoutMS: 15000,
+            socketTimeoutMS: 60000,
+            connectTimeoutMS: 15000,
             keepAlive: true,
-            keepAliveInitialDelay: 300000
+            keepAliveInitialDelay: 300000,
+            retryWrites: true,
+            w: 'majority'
         });
+
         console.log('数据库连接成功');
+        retryCount = 0; // 重置重试计数
     } catch (error) {
         console.error('数据库连接失败:', error.message);
-        // 不要立即退出，而是继续尝试
-        console.log('将在 5 秒后重试连接...');
-        setTimeout(connectDB, 5000);
+        retryCount++;
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000); // 指数退避，最大10秒
+        console.log(`将在 ${retryDelay/1000} 秒后进行第 ${retryCount} 次重试...`);
+        setTimeout(connectDB, retryDelay);
     }
 };
+
+// 监听数据库连接事件
+mongoose.connection.on('disconnected', () => {
+    console.log('数据库连接断开，尝试重新连接...');
+    setTimeout(connectDB, 5000);
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('数据库错误:', err);
+    if (err.name === 'MongoNetworkError') {
+        setTimeout(connectDB, 5000);
+    }
+});
 
 // 用户模型
 const UserSchema = new mongoose.Schema({
