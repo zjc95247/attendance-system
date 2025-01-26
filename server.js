@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 
-// 版本 1.0.1 - 测试自动部署
+// 版本 1.0.2 - 测试 GitHub Webhook 自动部署
 const app = express();
 
 // 请求日志中间件
